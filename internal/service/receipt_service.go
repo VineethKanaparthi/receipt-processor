@@ -14,8 +14,10 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+// ErrIdNotFound is an error indicating that the ID was not found in the database.
 var ErrIdNotFound = errors.New("id not found")
 
+// ProcessReceipt processes a receipt, calculates points, and stores the points in the database.
 func ProcessReceipt(receipt *model.Receipt, db *bolt.DB) (string, error) {
 	fmt.Printf("%+v\n", receipt)
 	points := calculatePoints(receipt)
@@ -99,6 +101,7 @@ func countAlphanumericCharacters(s string) int {
 	return count
 }
 
+// GetPoints retrieves points from the database based on the provided ID.
 func GetPoints(id string, db *bolt.DB) (int, error) {
 	var points int
 	err := db.View(func(tx *bolt.Tx) error {

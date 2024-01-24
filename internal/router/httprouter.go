@@ -10,14 +10,11 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// TODO:
-// documentation
+// SetupRouter configures the Gin router and defines API endpoints.
 func SetupRouter(db *bolt.DB) *gin.Engine {
 	r := gin.Default()
 
-	// TODO:
-	// 1) documentation
-	// 2) logging?
+	// POST /receipts/process endpoint
 	r.POST("/receipts/process", func(c *gin.Context) {
 		var receipt model.Receipt
 		if err := c.BindJSON(&receipt); err != nil {
@@ -33,9 +30,7 @@ func SetupRouter(db *bolt.DB) *gin.Engine {
 
 	})
 
-	// TODO:
-	// 1) documentation
-	// 2) logging?
+	// GET /receipts/:id/points endpoint
 	r.GET("receipts/:id/points", func(c *gin.Context) {
 		id := c.Params.ByName("id")
 		points, err := service.GetPoints(id, db)
