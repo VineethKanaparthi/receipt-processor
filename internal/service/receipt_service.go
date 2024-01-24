@@ -74,7 +74,7 @@ func calculatePoints(receipt *model.Receipt) int {
 	fmt.Printf("Points after Rule 5: %d\n", points)
 
 	// Rule 6: 6 points if the day in the purchase date is odd
-	if receipt.purchaseDate != "" {
+	if receipt.PurchaseDate != "" {
 		purchaseDate, _ := time.Parse("2006-01-02", receipt.PurchaseDate)
 		purchaseDay := purchaseDate.Day()
 		fmt.Println(purchaseDay)
@@ -85,7 +85,7 @@ func calculatePoints(receipt *model.Receipt) int {
 	fmt.Printf("Points after Rule 6: %d\n", points)
 
 	// Rule 7: 10 points if the time of purchase is after 2:00pm and before 4:00pm
-	if receipt.purchaseTime != "" {
+	if receipt.PurchaseTime != "" {
 		purchaseTime, _ := time.Parse("15:04", receipt.PurchaseTime)
 		fmt.Printf("%+v\n", purchaseTime)
 		if purchaseTime.After(time.Date(0, 1, 1, 14, 0, 0, 0, time.UTC)) &&
