@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -10,13 +11,24 @@ import (
 
 	model "github.com/VineethKanaparthi/receipt-processor/pkg"
 	"github.com/google/uuid"
+	bolt "go.etcd.io/bbolt"
 )
 
-func ProcessReceipt(receipt *model.Receipt) (string, error) {
+var ErrIdNotFound = errors.New("id not found")
+
+func ProcessReceipt(receipt *model.Receipt, db *bolt.DB) (string, error) {
 	fmt.Printf("%+v\n", receipt)
 	points := calculatePoints(receipt)
 	fmt.Println(points)
-	return uuid.New().String(), nil
+	id := uuid.New().String()
+	err := db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte("points"))
+		return bucket.Put([]byte(id), []byte(strconv.Itoa(points)))
+	})
+	if err != nil {
+		return id, err
+	}
+	return id, nil
 }
 
 // Calculate points for a receipt based on the defined rules
@@ -87,6 +99,18 @@ func countAlphanumericCharacters(s string) int {
 	return count
 }
 
-func GetPoints(id string) (int64, error) {
-	return 32, nil
+func GetPoints(id string, db *bolt.DB) (int, error) {
+	var points int
+	err := db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte("points"))
+		data := bucket.Get([]byte(id))
+		if data == nil {
+			return ErrIdNotFound
+		}
+		var converr error
+		points, converr = strconv.Atoi(string(data))
+		return converr
+	})
+
+	return points, err
 }
