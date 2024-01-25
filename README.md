@@ -21,28 +21,13 @@ The Receipt Processor web service processes receipts submitted through the API, 
 
 Before running the application, ensure you have the following installed:
 
-- Go (version 1.21.4)
+- Docker
 
-## Installation
+## Running the app
 
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/yourusername/receipt-processor.git
-   cd receipt-processor
-2. Run the following commands
-    ```
-    go get -u github.com/gin-gonic/gin
-    go get -u github.com/google/uuid
-    go get -u go.etcd.io/bbolt@latest 
-    go get -u "github.com/stretchr/testify/assert"
-    ```
-
-## Usage
-
-1.
-```
-go run cmd/main.go
+```cmd
+docker build --tag vineethkanaparthi/receipt-processor-webservice:latest .  
+docker run --publish 8080:8080 vineethkanaparthi/receipt-processor-webservice:latest
 ```
 requests will be served on port: 8080 
 
