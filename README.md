@@ -20,7 +20,7 @@ The Receipt Processor web service processes receipts submitted through the API, 
 
 Before running the application, ensure you have the following installed:
 
-- Docker
+- [Docker](https://docs.docker.com/desktop/)
 
 ## Running the app
 
