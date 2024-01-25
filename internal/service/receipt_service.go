@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"math"
 	"strconv"
@@ -43,19 +42,17 @@ func CalculatePoints(receipt *model.Receipt) int {
 	log.Printf("Points after Rule 1: %d\n", points)
 
 	// Rule 2: 50 points if the total is a round dollar amount with no cents
-	totalFloat := 0.0
-	fmt.Sscanf(receipt.Total, "%f", &totalFloat)
-	if totalFloat == float64(int(totalFloat)) {
-		points += 50
-	}
-	log.Println(totalFloat)
-	log.Printf("Points after Rule 2: %d\n", points)
-
 	// Rule 3: 25 points if the total is a multiple of 0.25
-	if totalFloat/0.25 == float64(int(totalFloat/0.25)) {
-		points += 25
+	total, err := strconv.ParseFloat(receipt.Total, 64)
+	if err == nil {
+		if total == math.Floor(total) {
+			points += 50 // 50 points if the total is a round dollar amount
+		}
+		if math.Mod(total, 0.25) == 0 {
+			points += 25 // 25 points if the total is a multiple of 0.25
+		}
 	}
-	log.Printf("Points after Rule 3: %d\n", points)
+	log.Printf("Points after Rule 2 & 3: %d\n", points)
 
 	// Rule 4: 5 points for every two items on the receipt
 	points += 5 * (len(receipt.Items) / 2)
