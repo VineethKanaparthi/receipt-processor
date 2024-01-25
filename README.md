@@ -21,7 +21,6 @@ The Receipt Processor web service processes receipts submitted through the API, 
 Before running the application, ensure you have the following installed:
 
 - Go (version 1.21.4)
-- Docker
 
 ## Installation
 
@@ -35,6 +34,7 @@ Before running the application, ensure you have the following installed:
     go get -u github.com/gin-gonic/gin
     go get -u github.com/google/uuid
     go get -u go.etcd.io/bbolt@latest 
+    go get -u "github.com/stretchr/testify/assert"
     ```
 
 ## Usage

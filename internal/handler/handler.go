@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/VineethKanaparthi/receipt-processor/internal/service"
@@ -20,6 +21,7 @@ func ProcessReceipt(c *gin.Context, db *bolt.DB) {
 	} else {
 		id, err := service.ProcessReceipt(&receipt, db)
 		if err != nil {
+			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process the receipt, please try again"})
 		} else {
 			c.JSON(http.StatusOK, gin.H{"id": id})

@@ -4,8 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/VineethKanaparthi/receipt-processor/internal/handler"
-	"github.com/gin-gonic/gin"
+	"github.com/VineethKanaparthi/receipt-processor/internal/router"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -26,18 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	// SetupRouter handles API routing
-	r := gin.Default()
-	// POST /receipts/process endpoint
-	r.POST("/receipts/process", func(c *gin.Context) {
-		handler.ProcessReceipt(c, db)
-	})
-
-	// GET /receipts/:id/points endpoint
-	r.GET("receipts/:id/points", func(c *gin.Context) {
-		handler.GetPoints(c, db)
-	})
-
+	r := router.SetupRouter(db)
 	r.Run(":8080")
 }
