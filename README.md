@@ -6,8 +6,7 @@ Receipt Processor is a Go-based web service that processes receipts and calculat
 
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Usage](#usage)
+- [Running](#running-the-app)
 - [Testing](#testing)
 - [API Endpoints](#api-endpoints)
 - [Rules for Calculating Points](#rules)
