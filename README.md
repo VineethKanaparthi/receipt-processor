@@ -8,6 +8,7 @@ Receipt Processor is a Go-based web service that processes receipts and calculat
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Testing](#testing)
 - [API Endpoints](#api-endpoints)
 - [Rules for Calculating Points](#rules)
 - [Examples](#examples)
@@ -43,6 +44,11 @@ Before running the application, ensure you have the following installed:
 ```
 go run cmd/main.go
 ```
+requests will be served on port: 8080 
+
+## Testing
+
+please find the postman collection in the root directory
 
 ## API Endpoints
 ### Endpoint: Process Receipts

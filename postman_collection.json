@@ -1,0 +1,53 @@
+{
+	"info": {
+		"_postman_id": "a40ef432-dfeb-4168-b4fe-5755a3c63264",
+		"name": "receipt-processor-fetch",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "process-receipt",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"retailer\": \"Target 1\",\n  \"purchaseDate\": \"2022-01-03\",\n  \"purchaseTime\": \"13:04\",\n  \"items\": [\n    {\n      \"shortDescription\": \"Mountain Dew 12PK1\",\n      \"price\": \"6.49\"\n    },{\n      \"shortDescription\": \"Emils Cheese Pizza\",\n      \"price\": \"12.25\"\n    },{\n      \"shortDescription\": \"Knorr Creamy Chicken\",\n      \"price\": \"1.26\"\n    },{\n      \"shortDescription\": \"Doritos Nacho Cheese\",\n      \"price\": \"3.35\"\n    },{\n      \"shortDescription\": \"   Klarbrunn 12-PK 12 FL OZ  \",\n      \"price\": \"12.00\"\n    }\n  ],\n  \"total\": \"35.35\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "localhost:8080/receipts/process"
+			},
+			"response": []
+		},
+		{
+			"name": "get-points",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/receipts/:id/points",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"receipts",
+						":id",
+						"points"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "a30c8f0b-73bf-4b16-94ee-c85c886f5bac"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
