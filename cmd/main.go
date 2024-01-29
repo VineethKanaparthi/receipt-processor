@@ -4,7 +4,7 @@ import (
 	"github.com/VineethKanaparthi/receipt-processor/internal/server"
 )
 
-// main function initializes the database and sets up the router to handle API requests.
+// main function initializes and runs the server
 func main() {
 	server := server.NewReceiptServer("receipts.db")
 	server.Run(":8080")

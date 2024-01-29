@@ -49,16 +49,18 @@ func (rs *ReceiptServer) CloseDB() {
 	}
 }
 
-// NewReceiptServer initializes the server, creates a database and sets up the router
+// NewReceiptServer initializes the server, creates a database with dbname and sets up the router
 func NewReceiptServer(dbname string) *ReceiptServer {
 	rs := &ReceiptServer{}
-	rs.DB = NewBoltDatabase(dbname)
+
 	router := gin.Default()
 	// POST /receipts/process endpoint
 	router.POST("/receipts/process", rs.processReceipt)
 	// GET /receipts/:id/points endpoint
 	router.GET("receipts/:id/points", rs.getPoints)
+
 	rs.Engine = router
+	rs.DB = NewBoltDatabase(dbname)
 	return rs
 }
 
