@@ -4,7 +4,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/VineethKanaparthi/receipt-processor/internal/service"
 	model "github.com/VineethKanaparthi/receipt-processor/pkg"
@@ -22,35 +21,8 @@ type ReceiptResponse struct {
 	ID string `json:"id"`
 }
 
-// NewBoltDatabase initializes the database
-func NewBoltDatabase(dbname string) *bolt.DB {
-	db, err := bolt.Open(dbname, 0600, &bolt.Options{Timeout: 1 * time.Second})
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Initialize the points bucket in the database
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte("points"))
-		return err
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return db
-}
-
-// CloseDB closes the database.
-func (rs *ReceiptServer) CloseDB() {
-	if rs.DB != nil {
-		if err := rs.DB.Close(); err != nil {
-			log.Println("Error closing database:", err)
-		}
-	}
-}
-
 // NewReceiptServer initializes the server, creates a database with dbname and sets up the router
-func NewReceiptServer(dbname string) *ReceiptServer {
+func NewReceiptServer() *ReceiptServer {
 	rs := &ReceiptServer{}
 
 	router := gin.Default()
@@ -60,7 +32,6 @@ func NewReceiptServer(dbname string) *ReceiptServer {
 	router.GET("receipts/:id/points", rs.getPoints)
 
 	rs.Engine = router
-	rs.DB = NewBoltDatabase(dbname)
 	return rs
 }
 

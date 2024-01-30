@@ -7,13 +7,16 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/VineethKanaparthi/receipt-processor/internal/database"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetPoints(t *testing.T) {
-	server := NewReceiptServer(":memory:")
-	defer server.CloseDB()
+	db := database.NewBoltDatabase(":memory:")
+	server := NewReceiptServer()
+	server.DB = db
+	defer db.Close()
 	// Test /receipts/:id/points endpoint with invalid id
 	t.Run("GET /receipts/:id/points", func(t *testing.T) {
 		w := httptest.NewRecorder()
@@ -34,8 +37,10 @@ func TestGetPoints(t *testing.T) {
 }
 
 func TestProcessReceipt(t *testing.T) {
-	server := NewReceiptServer(":memory:")
-	defer server.CloseDB()
+	db := database.NewBoltDatabase(":memory:")
+	server := NewReceiptServer()
+	server.DB = db
+	defer db.Close()
 	// Test /receipts/process endpoint invalid json
 	t.Run("POST /receipts/process", func(t *testing.T) {
 		w := httptest.NewRecorder()
