@@ -1,43 +1,51 @@
-package router
+package server
 
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
+	"github.com/VineethKanaparthi/receipt-processor/internal/database"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	bolt "go.etcd.io/bbolt"
 )
 
-func TestSetupRouter(t *testing.T) {
-	// initialize the database
-	db, err := bolt.Open(":memory:", 0600, &bolt.Options{Timeout: 1 * time.Second})
-	if err != nil {
-		log.Fatal(err)
-	}
+func TestGetPoints(t *testing.T) {
+	db := database.NewBoltDatabase(":memory:")
+	server := NewReceiptServer()
+	server.DB = db
 	defer db.Close()
+	// Test /receipts/:id/points endpoint with invalid id
+	t.Run("GET /receipts/:id/points", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/receipts/123/points", nil)
+		server.ServeHTTP(w, req)
 
-	// Initialize the points bucket in the database
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte("points"))
-		return err
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	router := SetupRouter(db)
 
+	// Test /receipts/:id/points endpoint with non existent id
+	t.Run("GET /receipts/:id/points", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/receipts/d49ae048-61cc-4236-a258-1c4b3c2362ab/points", nil)
+		server.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+}
+
+func TestProcessReceipt(t *testing.T) {
+	db := database.NewBoltDatabase(":memory:")
+	server := NewReceiptServer()
+	server.DB = db
+	defer db.Close()
 	// Test /receipts/process endpoint invalid json
 	t.Run("POST /receipts/process", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("POST", "/receipts/process", nil)
-		router.ServeHTTP(w, req)
-
+		server.ServeHTTP(w, req)
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
@@ -71,8 +79,7 @@ func TestSetupRouter(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("POST", "/receipts/process", bytes.NewBuffer([]byte(receiptJSON)))
 		req.Header.Set("Content-Type", "application/json")
-		router.ServeHTTP(w, req)
-
+		server.ServeHTTP(w, req)
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
@@ -106,7 +113,7 @@ func TestSetupRouter(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("POST", "/receipts/process", bytes.NewBuffer([]byte(receiptJSON)))
 		req.Header.Set("Content-Type", "application/json")
-		router.ServeHTTP(w, req)
+		server.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -141,7 +148,7 @@ func TestSetupRouter(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("POST", "/receipts/process", bytes.NewBuffer([]byte(receiptJSON)))
 		req.Header.Set("Content-Type", "application/json")
-		router.ServeHTTP(w, req)
+		server.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -176,7 +183,7 @@ func TestSetupRouter(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("POST", "/receipts/process", bytes.NewBuffer([]byte(receiptJSON)))
 		req.Header.Set("Content-Type", "application/json")
-		router.ServeHTTP(w, req)
+		server.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -211,40 +218,59 @@ func TestSetupRouter(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("POST", "/receipts/process", bytes.NewBuffer([]byte(receiptJSON)))
 		req.Header.Set("Content-Type", "application/json")
-		router.ServeHTTP(w, req)
+		server.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		// Unmarshal response to check if it contains 'id'
-		var response map[string]string
-		err := json.Unmarshal(w.Body.Bytes(), &response)
-		fmt.Println(response)
-		assert.NoError(t, err)
-		assert.Contains(t, response, "id")
+		receiptResponse := decodeResponse(w, t)
+		assertUUID(receiptResponse.ID, t)
 
 		w = httptest.NewRecorder()
-		req, _ = http.NewRequest("GET", "/receipts/"+response["id"]+"/points", nil)
-		router.ServeHTTP(w, req)
+		req, _ = http.NewRequest("GET", "/receipts/"+receiptResponse.ID+"/points", nil)
+		server.ServeHTTP(w, req)
 		assert.Equal(t, http.StatusOK, w.Code)
-		err = json.Unmarshal(w.Body.Bytes(), &response)
+		var response map[string]int
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assertNoErrorWhileDecodingJson(err, t, w)
 		assert.Contains(t, response, "points")
 	})
 
-	// Test /receipts/:id/points endpoint with invalid id
-	t.Run("GET /receipts/:id/points", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/receipts/123/points", nil)
-		router.ServeHTTP(w, req)
+}
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-	})
+func decodeResponse(response *httptest.ResponseRecorder, t testing.TB) ReceiptResponse {
+	t.Helper()
+	var got ReceiptResponse
+	err := json.NewDecoder(response.Body).Decode(&got)
+	assertNoErrorWhileDecodingJson(err, t, response)
+	return got
+}
 
-	// Test /receipts/:id/points endpoint with non existent id
-	t.Run("GET /receipts/:id/points", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/receipts/d49ae048-61cc-4236-a258-1c4b3c2362ab/points", nil)
-		router.ServeHTTP(w, req)
+func assertContentTypeJson(response *httptest.ResponseRecorder, t testing.TB) {
+	t.Helper()
+	if response.Result().Header.Get("content-type") != "application/json" {
+		t.Errorf("Expected content type json but found %v", response.Result().Header.Get("content-type"))
+	}
+}
 
-		assert.Equal(t, http.StatusNotFound, w.Code)
-	})
+func assertUUID(id string, t testing.TB) {
+	t.Helper()
+	_, err := uuid.Parse(id)
+	if err != nil {
+		t.Errorf("Expected a uuid but found %s", id)
+	}
+}
+
+func assertNoErrorWhileDecodingJson(err error, t testing.TB, response *httptest.ResponseRecorder) {
+	t.Helper()
+	if err != nil {
+		t.Errorf("Failure decoding json '%s', got error: %+v", response.Body.String(), err.Error())
+	}
+}
+
+func assertStatusCode(response *httptest.ResponseRecorder, status int, t testing.TB) {
+	t.Helper()
+	if response.Code != status {
+		t.Errorf("Expected response code %d, but got %d", status, response.Code)
+	}
 }
